@@ -92,7 +92,7 @@ resource  "dcos_security_group" "nat" {
   resource "aws_instance" "nat" {
         ami = "ami-4c9e4b24"
         availability_zone = "us-east-1a"
-        instance_type = m3.medium
+        instance_type = "m3.medium"
         key_name = "${var.dcos_key}"
         vpc_security_group_ids = ["${dcos_security_group.nat.id}"]
         subnet_id = "${dcos_subnet.us-east-1a-public.id}"

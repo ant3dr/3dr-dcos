@@ -213,9 +213,9 @@ resource "aws_security_group" "dcos_master_insecure" {
 
 resource "aws_instance" "dcos_bootstrap" {
   ami = "${lookup(var.ami_ids, var.region)}"
-  instance_type = "${var.instance_types.bootstrap}"
+  instance_type = "${var.instance_types}_bootstrap"
   availability_zone = "${var.region}${var.availability_zone}"
-  key_name = "${var.provisioner.key_name}"
+  key_name = "${var.provisioner}_key_name"
   tags {
     Name = "${var.infra_name}_dcos_bootstrap"
   }
@@ -223,46 +223,46 @@ resource "aws_instance" "dcos_bootstrap" {
                              "${aws_security_group.consul_member.id}",
                              "${aws_security_group.bootstrap_http.id}"]
   connection {
-    user = "${var.provisioner.username}"
-    key_file = "${path.module}/keys//${var.provisioner.key_name}.pem"
+    user = "${var.provisioner[username]}"
+    key_file = "${path.module}/keys//${var.provisioner[key_name]}.pem"
   }
   provisioner "remote-exec" {
     inline = [
-      "mkdir -p ${var.provisioner.directory}",
-      "echo export BOOTSTRAP_NODE_ADDRESS=${self.private_dns} > ${var.provisioner.directory}/vars",
-      "echo export BOOTSTRAP_PORT=${var.bootstrap_port} >> ${var.provisioner.directory}/vars",
-      "echo export EXPECTED_MASTER_COUNT=${var.instance_counts.master} >> ${var.provisioner.directory}/vars",
-      "echo export EXPECTED_AGENT_COUNT=${var.instance_counts.agent+var.instance_counts.agent_public} >> ${var.provisioner.directory}/vars",
-      "echo export DATACENTER=${var.infra_name} >> ${var.provisioner.directory}/vars",
-      "echo export NODE_NAME=dcos_bootstrap >> ${var.provisioner.directory}/vars",
-      "echo export IS_CONSUL_SERVER=true >> ${var.provisioner.directory}/vars",
-      "echo export IS_BOOTSTRAP_SERVER=true >> ${var.provisioner.directory}/vars",
-      "echo export IPV4_PRIVATE=${self.private_ip} >> ${var.provisioner.directory}/vars",
-      "echo export IPV4_PUBLIC=${self.public_ip} >> ${var.provisioner.directory}/vars"
+      "mkdir -p ${var.provisioner[directory]}",
+      "echo export BOOTSTRAP_NODE_ADDRESS=${self.private_dns} > ${var.provisioner[directory]}/vars",
+      "echo export BOOTSTRAP_PORT=${var.bootstrap_port} >> ${var.provisioner[directory]}/vars",
+      "echo export EXPECTED_MASTER_COUNT=${var.instance_counts[master]} >> ${var.provisioner[directory]}/vars",
+      "echo export EXPECTED_AGENT_COUNT=${var.instance_counts[agent]+var.instance_counts[agent_public]} >> ${var.provisioner[directory]}/vars",
+      "echo export DATACENTER=${var.infra_name} >> ${var.provisioner[directory]}/vars",
+      "echo export NODE_NAME=dcos_bootstrap >> ${var.provisioner[directory]}/vars",
+      "echo export IS_CONSUL_SERVER=true >> ${var.provisioner[directory]}/vars",
+      "echo export IS_BOOTSTRAP_SERVER=true >> ${var.provisioner[directory]}/vars",
+      "echo export IPV4_PRIVATE=${self.private_ip} >> ${var.provisioner[directory]}/vars",
+      "echo export IPV4_PUBLIC=${self.public_ip} >> ${var.provisioner[directory]}/vars"
     ]
   }
   provisioner "file" {
     source = "${path.module}/provision/"
-    destination = "${var.provisioner.directory}"
+    destination = "${var.provisioner[directory]}"
   }
   provisioner "remote-exec" {
     inline = [
-      "cd ${var.provisioner.directory} && chmod +x prepare-dcos-machine.sh && ./prepare-dcos-machine.sh"
+      "cd ${var.provisioner[directory]} && chmod +x prepare-dcos-machine.sh && ./prepare-dcos-machine.sh"
     ]
   }
   provisioner "remote-exec" {
     inline = [
-      "cd ${var.provisioner.directory} && chmod +x setup-consul.sh && ./setup-consul.sh"
+      "cd ${var.provisioner[directory]} && chmod +x setup-consul.sh && ./setup-consul.sh"
     ]
   }
 }
 
 resource "aws_instance" "dcos_master_node" {
-  count = "${var.instance_counts.master}"
+  count = "${var.instance_counts[master]}"
   ami = "${lookup(var.ami_ids, var.region)}"
-  instance_type = "${var.instance_types.master}"
+  instance_type = "${var.instance_types[master]}"
   availability_zone = "${var.region}${var.availability_zone}"
-  key_name = "${var.provisioner.key_name}"
+  key_name = "${var.provisioner[key_name]}"
   tags {
     Name = "${var.infra_name}_dcos_master_node-${count.index}"
   }
@@ -271,43 +271,43 @@ resource "aws_instance" "dcos_master_node" {
                              "${aws_security_group.dcos_member.id}",
                              "${aws_security_group.dcos_master_insecure.id}" ]
   connection {
-    user = "${var.provisioner.username}"
-    key_file = "${path.module}/keys//${var.provisioner.key_name}.pem"
+    user = "${var.provisioner[username]}"
+    key_file = "${path.module}/keys//${var.provisioner[key_name]}.pem"
   }
   provisioner "remote-exec" {
     inline = [
-      "mkdir -p ${var.provisioner.directory}",
-      "echo export BOOTSTRAP_NODE_ADDRESS=${aws_instance.dcos_bootstrap.private_dns} > ${var.provisioner.directory}/vars",
-      "echo export BOOTSTRAP_PORT=${var.bootstrap_port} >> ${var.provisioner.directory}/vars",
-      "echo export DATACENTER=${var.infra_name} >> ${var.provisioner.directory}/vars",
-      "echo export NODE_NAME=dcos_master_node-${count.index} >> ${var.provisioner.directory}/vars",
-      "echo export IPV4_PRIVATE=${self.private_ip} >> ${var.provisioner.directory}/vars",
-      "echo export IPV4_PUBLIC=${self.public_ip} >> ${var.provisioner.directory}/vars",
-      "echo export DCOS_NODE_TYPE=master >> ${var.provisioner.directory}/vars"
+      "mkdir -p ${var.provisioner[directory]}",
+      "echo export BOOTSTRAP_NODE_ADDRESS=${aws_instance.dcos_bootstrap.private_dns} > ${var.provisioner[directory]}/vars",
+      "echo export BOOTSTRAP_PORT=${var.bootstrap_port} >> ${var.provisioner[directory]}/vars",
+      "echo export DATACENTER=${var.infra_name} >> ${var.provisioner[directory]}/vars",
+      "echo export NODE_NAME=dcos_master_node-${count.index} >> ${var.provisioner[directory]}/vars",
+      "echo export IPV4_PRIVATE=${self.private_ip} >> ${var.provisioner[directory]}/vars",
+      "echo export IPV4_PUBLIC=${self.public_ip} >> ${var.provisioner[directory]}/vars",
+      "echo export DCOS_NODE_TYPE=master >> ${var.provisioner[directory]}/vars"
     ]
   }
   provisioner "file" {
     source = "${path.module}/provision/"
-    destination = "${var.provisioner.directory}"
+    destination = "${var.provisioner[directory]}"
   }
   provisioner "remote-exec" {
     inline = [
-      "cd ${var.provisioner.directory} && chmod +x prepare-dcos-machine.sh && ./prepare-dcos-machine.sh"
+      "cd ${var.provisioner[directory]} && chmod +x prepare-dcos-machine.sh && ./prepare-dcos-machine.sh"
     ]
   }
   provisioner "remote-exec" {
     inline = [
-      "cd ${var.provisioner.directory} && chmod +x setup-consul.sh && ./setup-consul.sh"
+      "cd ${var.provisioner[directory]} && chmod +x setup-consul.sh && ./setup-consul.sh"
     ]
   }
 }
 
 resource "aws_instance" "dcos_agent_node" {
-  count = "${var.instance_counts.agent}"
+  count = "${var.instance_counts[agent]}"
   ami = "${lookup(var.ami_ids, var.region)}"
-  instance_type = "${var.instance_types.agent}"
+  instance_type = "${var.instance_types[agent]}"
   availability_zone = "${var.region}${var.availability_zone}"
-  key_name = "${var.provisioner.key_name}"
+  key_name = "${var.provisioner[key_name]}"
   tags {
     Name = "${var.infra_name}_dcos_agent_node-${count.index}"
   }
@@ -316,43 +316,43 @@ resource "aws_instance" "dcos_agent_node" {
                              "${aws_security_group.dcos_member.id}",
                              "${aws_security_group.dcos_agent.id}" ]
   connection {
-    user = "${var.provisioner.username}"
-    key_file = "${path.module}/keys/${var.provisioner.key_name}.pem"
+    user = "${var.provisioner[username]}"
+    key_file = "${path.module}/keys/${var.provisioner[key_name]}.pem"
   }
   provisioner "remote-exec" {
     inline = [
-      "mkdir -p ${var.provisioner.directory}",
-      "echo export BOOTSTRAP_NODE_ADDRESS=${aws_instance.dcos_bootstrap.private_dns} > ${var.provisioner.directory}/vars",
-      "echo export BOOTSTRAP_PORT=${var.bootstrap_port} >> ${var.provisioner.directory}/vars",
-      "echo export DATACENTER=${var.infra_name} >> ${var.provisioner.directory}/vars",
-      "echo export NODE_NAME=dcos_agent_node-${count.index} >> ${var.provisioner.directory}/vars",
-      "echo export IPV4_PRIVATE=${self.private_ip} >> ${var.provisioner.directory}/vars",
-      "echo export IPV4_PUBLIC=${self.public_ip} >> ${var.provisioner.directory}/vars",
-      "echo export DCOS_NODE_TYPE=agent >> ${var.provisioner.directory}/vars"
+      "mkdir -p ${var.provisioner[directory]}",
+      "echo export BOOTSTRAP_NODE_ADDRESS=${aws_instance.dcos_bootstrap.private_dns} > ${var.provisioner[directory]}/vars",
+      "echo export BOOTSTRAP_PORT=${var.bootstrap_port} >> ${var.provisioner[directory]}/vars",
+      "echo export DATACENTER=${var.infra_name} >> ${var.provisioner[directory]}/vars",
+      "echo export NODE_NAME=dcos_agent_node-${count.index} >> ${var.provisioner[directory]}/vars",
+      "echo export IPV4_PRIVATE=${self.private_ip} >> ${var.provisioner[directory]}/vars",
+      "echo export IPV4_PUBLIC=${self.public_ip} >> ${var.provisioner[directory]}/vars",
+      "echo export DCOS_NODE_TYPE=agent >> ${var.provisioner[directory]}/vars"
     ]
   }
   provisioner "file" {
     source = "${path.module}/provision/"
-    destination = "${var.provisioner.directory}"
+    destination = "${var.provisioner[directory]}"
   }
   provisioner "remote-exec" {
     inline = [
-      "cd ${var.provisioner.directory} && chmod +x prepare-dcos-machine.sh && ./prepare-dcos-machine.sh"
+      "cd ${var.provisioner[directory]} && chmod +x prepare-dcos-machine.sh && ./prepare-dcos-machine.sh"
     ]
   }
   provisioner "remote-exec" {
     inline = [
-      "cd ${var.provisioner.directory} && chmod +x setup-consul.sh && ./setup-consul.sh"
+      "cd ${var.provisioner[directory]} && chmod +x setup-consul.sh && ./setup-consul.sh"
     ]
   }
 }
 
 resource "aws_instance" "dcos_agent_public_node" {
-  count = "${var.instance_counts.agent_public}"
+  count = "${var.instance_counts[agent_public]}"
   ami = "${lookup(var.ami_ids, var.region)}"
-  instance_type = "${var.instance_types.agent_public}"
+  instance_type = "${var.instance_types[agent_public]}"
   availability_zone = "${var.region}${var.availability_zone}"
-  key_name = "${var.provisioner.key_name}"
+  key_name = "${var.provisioner[key_name]}"
   tags {
     Name = "${var.infra_name}_dcos_agent_public_node-${count.index}"
   }
@@ -361,33 +361,33 @@ resource "aws_instance" "dcos_agent_public_node" {
                              "${aws_security_group.dcos_member.id}",
                              "${aws_security_group.dcos_agent_public.id}" ]
   connection {
-    user = "${var.provisioner.username}"
-    key_file = "${path.module}/keys/${var.provisioner.key_name}.pem"
+    user = "${var.provisioner[username]}"
+    key_file = "${path.module}/keys/${var.provisioner[key_name]}.pem"
   }
   provisioner "remote-exec" {
     inline = [
-      "mkdir -p ${var.provisioner.directory}",
-      "echo export BOOTSTRAP_NODE_ADDRESS=${aws_instance.dcos_bootstrap.private_dns} > ${var.provisioner.directory}/vars",
-      "echo export BOOTSTRAP_PORT=${var.bootstrap_port} >> ${var.provisioner.directory}/vars",
-      "echo export DATACENTER=${var.infra_name} >> ${var.provisioner.directory}/vars",
-      "echo export NODE_NAME=dcos_agent_public_node-${count.index} >> ${var.provisioner.directory}/vars",
-      "echo export IPV4_PRIVATE=${self.private_ip} >> ${var.provisioner.directory}/vars",
-      "echo export IPV4_PUBLIC=${self.public_ip} >> ${var.provisioner.directory}/vars",
-      "echo export DCOS_NODE_TYPE=agent_public >> ${var.provisioner.directory}/vars"
+      "mkdir -p ${var.provisioner[directory]}",
+      "echo export BOOTSTRAP_NODE_ADDRESS=${aws_instance.dcos_bootstrap.private_dns} > ${var.provisioner[directory]}/vars",
+      "echo export BOOTSTRAP_PORT=${var.bootstrap_port} >> ${var.provisioner[directory]}/vars",
+      "echo export DATACENTER=${var.infra_name} >> ${var.provisioner[directory]}/vars",
+      "echo export NODE_NAME=dcos_agent_public_node-${count.index} >> ${var.provisioner[directory]}/vars",
+      "echo export IPV4_PRIVATE=${self.private_ip} >> ${var.provisioner[directory]}/vars",
+      "echo export IPV4_PUBLIC=${self.public_ip} >> ${var.provisioner[directory]}/vars",
+      "echo export DCOS_NODE_TYPE=agent_public >> ${var.provisioner[directory]}/vars"
     ]
   }
   provisioner "file" {
     source = "${path.module}/provision/"
-    destination = "${var.provisioner.directory}"
+    destination = "${var.provisioner[directory]}"
   }
   provisioner "remote-exec" {
     inline = [
-      "cd ${var.provisioner.directory} && chmod +x prepare-dcos-machine.sh && ./prepare-dcos-machine.sh"
+      "cd ${var.provisioner[directory]} && chmod +x prepare-dcos-machine.sh && ./prepare-dcos-machine.sh"
     ]
   }
   provisioner "remote-exec" {
     inline = [
-      "cd ${var.provisioner.directory} && chmod +x setup-consul.sh && ./setup-consul.sh"
+      "cd ${var.provisioner[directory]} && chmod +x setup-consul.sh && ./setup-consul.sh"
     ]
   }
 }
