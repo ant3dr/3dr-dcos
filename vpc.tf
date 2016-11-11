@@ -8,25 +8,9 @@ resource "aws_vpc" "3dr_dcos" {
   }
 }
 
-variable "vpc_cidr"{
-  description = "CIDR for dcos"
-  default = "10.0.0.0/16"
-}
-
-variable "private_subnet_cidr" {
-  description = "DCOS CIDR for the Private Subnet"
-  default = "10.0.0.0/22"
-}
-
-variable "public_subnet_cidr" {
-  description = "DCOS CIDR for the Public Subnet"
-  default = "10.0.4.0/22"
-}
-
 resource "aws_internet_gateway" "default" {
   vpc_id = "${aws_vpc.default.id}"
 }
-
 /*
   NAT Instance 
 */
@@ -92,7 +76,7 @@ resource  "dcos_security_group" "nat" {
   resource "aws_instance" "nat" {
         ami = "ami-4c9e4b24"
         availability_zone = "us-east-1a"
-        instance_type = m3.medium
+        instance_type = "m3.medium"
         key_name = "${var.dcos_key}"
         vpc_security_group_ids = ["${dcos_security_group.nat.id}"]
         subnet_id = "${dcos_subnet.us-east-1a-public.id}"

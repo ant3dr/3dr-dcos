@@ -2,11 +2,9 @@
   Security Groups for DC/OS VPC
 */
 
-
 resource "aws_security_group" "default" {
-  name = default
+  name = "default"
   description = "default VPC security group"
- 
   ingress {
       from_port = 0
       to_port = 0
@@ -101,13 +99,13 @@ resource "aws_security_group" "dcos-cluster-PublicSlaveSecurityGroup"{
       from_port = 0 
       to_port = 0
       protocol = "-1"
-      security_groups = ["${aws_security_group.dcos-cluster-SlaveSecurityGroup}"]
+      security_groups = ["${aws_security_group.dcos-cluster-SlaveSecurityGroup.id}"]
   }
   ingress {
       from_port = 0
       to_port = 0
       protocol = "-1"
-      security_groups = ["${aws_security_group.dcos-cluster-MasterSecurityGroup}"]
+      security_groups = ["${aws_security_group.dcos-cluster-MasterSecurityGroup.id}"]
   }
   
   egress {
@@ -119,56 +117,56 @@ resource "aws_security_group" "dcos-cluster-PublicSlaveSecurityGroup"{
 }
 
 resource "aws_security_group" "dcos-cluster-MasterSecurityGroup" {
-  name = dcos-cluster-MasterSecurityGroup
-  description = Mesos Masters
+  name = "dcos-cluster-MasterSecurityGroup"
+  description = "Mesos Masters"
  
   ingress {
       from_port = 80
       to_port = 80
       protocol = "tcp"
-      security_groups = ["${aws_security_group.dcos-cluster-LbSecurityGroup}"]
+      security_groups = ["${aws_security_group.dcos-cluster-LbSecurityGroup.id}"]
   }
   ingress {
       from_port = 443
       to_port = 443
       protocol = "tcp"
-      security_groups = ["${aws_security_group.dcos-cluster-LbSecurityGroup}"]
+      security_groups = ["${aws_security_group.dcos-cluster-LbSecurityGroup.id}"]
   }
   ingress {
       from_port = 2181
       to_port = 2181
       protocol = "tcp"
-      security_groups = ["${aws_security_group.dcos-cluster-LbSecurityGroup}"]
+      security_groups = ["${aws_security_group.dcos-cluster-LbSecurityGroup.id}"]
   }
   ingress {
       from_port = 5050
       to_port = 5050
       protocol = "tcp"
-      security_groups = ["${aws_security_group.dcos-cluster-LbSecurityGroup}"]
+      security_groups = ["${aws_security_group.dcos-cluster-LbSecurityGroup.id}"]
   }
   ingress {
       from_port = 8080
       to_port = 8080
       protocol = "tcp"
-      security_groups = ["${aws_security_group.dcos-cluster-LbSecurityGroup}"]
+      security_groups = ["${aws_security_group.dcos-cluster-LbSecurityGroup.id}"]
   }
   ingress {
       from_port = 8181
       to_port = 8181
       protocol = "tcp"
-      security_groups = ["${aws_security_group.dcos-cluster-LbSecurityGroup}"]
+      security_groups = ["${aws_security_group.dcos-cluster-LbSecurityGroup.id}"]
   }
   ingress {
       from_port = 0 
       to_port = 0
       protocol = "-1"
-      security_groups = ["${aws_security_group.dcos-cluster-PublicSlaveSecurityGroup}"]
+      security_groups = ["${aws_security_group.dcos-cluster-PublicSlaveSecurityGroup.id}"]
   }
   ingress {
       from_port = 0
       to_port = 0
       protocol = -1
-      security_groups = ["${aws_security_group.dcos-cluster-SlaveSecurityGroup}"]
+      security_groups = ["${aws_security_group.dcos-cluster-SlaveSecurityGroup.id}"]
   }
   ingress {
       from_port = 0
@@ -185,14 +183,13 @@ resource "aws_security_group" "dcos-cluster-MasterSecurityGroup" {
  }
 
 resource "aws_security_group" "dcos-cluster-SlaveSecurityGroup" {
-  name = dcos-cluster-SlaveSecurityGroup
-  description = Mesos Slaves
-
+  name = "dcos-cluster-SlaveSecurityGroup"
+  description = "Mesos Slaves"
   ingress {
       from_port = 0
       to_port = 0
       protocol = "-1"
-      security_groups = ["${aws_security_group.dcos-cluster-PublicSlaveSecurityGroup}"]
+      security_groups = ["${aws_security_group.dcos-cluster-PublicSlaveSecurityGroup.id}"]
   }
   ingress {
       from_port = 0
@@ -204,7 +201,7 @@ resource "aws_security_group" "dcos-cluster-SlaveSecurityGroup" {
       from_port = 0
       to_port = 0
       protocol = "-1"
-      security_groups = ["${aws_security_group.dcos-cluster-MasterSecurityGroup}"]
+      security_groups = ["${aws_security_group.dcos-cluster-MasterSecurityGroup.id}"]
   }
   egress {
       from_port = 0
@@ -215,14 +212,14 @@ resource "aws_security_group" "dcos-cluster-SlaveSecurityGroup" {
 }
 
 resource "aws_security_group" "dcos-cluster-LbSecurityGroup" {
-  name = dcos-cluster-LbSecurityGroup
-  description = Mesos Master LB
+  name = "dcos-cluster-LbSecurityGroup"
+  description = "Mesos Master LB"
 
   ingress {
       from_port = 2181
       to_port = 2181
       protocol = "tcp"
-      security_groups = ["${aws_security_group.dcos-cluster-SlaveSecurityGroup}"]
+      security_groups = ["${aws_security_group.dcos-cluster-SlaveSecurityGroup.id}"]
   }
   egress {
       from_port = 0
@@ -232,4 +229,3 @@ resource "aws_security_group" "dcos-cluster-LbSecurityGroup" {
   }
  }
 
-}
