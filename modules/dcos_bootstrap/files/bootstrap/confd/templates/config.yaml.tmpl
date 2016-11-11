@@ -5,7 +5,7 @@ aws_region: {{getv "/dcos/aws/region"}}
 exhibitor_explicit_keys: 'false'
 s3_bucket: {{getv "/dcos/exhibitor/bucket"}}
 s3_prefix: {{getv "/dcos/exhibitor/prefix"}}
-ip_detect: /gencong/ip-detect
+ip_detect_filename: /genconf/ip-detect
 master_discovery: master_http_loadbalancer
 exhibitor_address: {{getv "/dcos/exhibitor/address"}}
 num_masters: 3
